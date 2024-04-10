@@ -18,7 +18,12 @@ void run_command(char** argv, int bg){
             run_mkdir(argv);
         }else if(!strcmp(argv[0],"rmdir")){
             run_rmdir(argv);
-        }else{
+        }else if(!strcmp(argv[0],"cat")){
+            run_cat(argv);
+        }else if(!strcmp(argv[0],"touch")){
+            run_touch(argv);
+        }
+        else{
             if(execve(argv[0], argv, environ) < 0) {	//ex) /bin/ls ls -al &
                 printf("%s: Command not found.\n", argv[0]);
                 exit(0);

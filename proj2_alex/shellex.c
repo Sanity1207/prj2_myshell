@@ -15,7 +15,7 @@ int main()
 
     while (1) {
 	/* Read */
-	printf("> ");                   
+	printf("CSE4100-SP-P2> ");                   
 	fgets(cmdline, MAXLINE, stdin); 
 	if (feof(stdin))
 	    exit(0);
@@ -50,10 +50,8 @@ void eval(char *cmdline)
 /* If first arg is a builtin command, run it and return true */
 int builtin_command(char **argv) 
 {
-    if (!strcmp(argv[0], "quit")){/* quit command */
+    if (!strcmp(argv[0], "exit")){/* quit command */
         exit(0);  
-    }else if (!strcmp(argv[0],"exit")){
-        // run_exit(argv);
     }else if(!strcmp(argv[0],"cd")){
         run_cd(argv);
         return 1;
