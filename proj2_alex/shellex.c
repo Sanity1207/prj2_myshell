@@ -17,8 +17,8 @@ int main()
      * Initialize custom argument arrays
     */
    for (int i = 0; i < MAXARGS; i++) {
-        first_args[i] = NULL;
-        rest_args[i] = NULL;
+    first_args[i] = NULL;
+    rest_args[i] = NULL;
     }
 
     while (1) {
@@ -27,7 +27,7 @@ int main()
 	fgets(cmdline, MAXLINE, stdin); 
 	if (feof(stdin))
 	    exit(0);
-        
+
 	/* Evaluate */
 	eval(cmdline);
     } 
@@ -42,12 +42,62 @@ void eval(char *cmdline)
     char buf[MAXLINE];   /* Holds modified command line */
     int bg;              /* Should the job run in bg or fg? */
     pid_t pid;           /* Process id */
+    /**
+     * ALEX CREATED VARIABLES
+    */
+    int child_status;
+    int pipe_fd[2];
+    bool read_from_pipe = false;
+    bool write_to_pipe = false;
+    bool is_part_of_pipe = false;
+
+    /**
+     * END ALEX CREATED VARIABLES
+    */
     strcpy(buf, cmdline);
     bg = parseline(buf, argv); 
     if (argv[0] == NULL)  
 	return;   /* Ignore empty lines */
+
+
     if (!builtin_command(argv)) { //quit -> exit(0), & -> ignore, other -> run
-        run_command(argv,bg,NULL,NULL,false);
+        if(pid==0){ //child process
+            if(is_argv_pipe(argv)){
+                
+            }
+            if(!strcmp(argv[0],"ls")){
+                Execve("/bin/ls", argv,NULL);
+            }else if(!strcmp(argv[0],"mkdir")){
+                run_mkdir(argv);
+            }else if(!strcmp(argv[0],"rmdir")){
+                run_rmdir(argv);
+            }else if(!strcmp(argv[0],"cat")){
+                run_cat(argv);
+            }else if(!strcmp(argv[0],"touch")){
+                run_touch(argv);
+            }
+            else{
+                if(execve(argv[0], argv, environ) < 0) {	//ex) /bin/ls ls -al &
+                    printf("%s: Command not found.\n", argv[0]);
+                    exit(0);
+                }
+            }
+        }else{//parent process
+            /* Parent waits for foreground job to terminate */
+            if (!bg){ 
+                pid_t wpid = Wait(&child_status);
+                if(!WIFEXITED(child_status)){
+                    printf("Child %d terminated abnormally\n",wpid);
+                }
+            }else{//when there is backgrount process!
+                printf("%d\n", pid);
+                //TODO: Do you need to print the command line?
+            }
+
+        
+
+
+        }
     }
     
 
