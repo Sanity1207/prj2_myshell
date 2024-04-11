@@ -2,6 +2,9 @@
 #define RUNNERS_C
 #include "runners.h"
 
+/**
+ * builtin command
+*/
 void run_cd(char** argv){
     if(argv[1] == NULL){
         if(chdir(getenv("HOME"))){
@@ -29,11 +32,23 @@ void run_cd(char** argv){
 }
 
 /**
+ * Not bulitin command
  * already forked. use execve
 */
 
 void run_ls(char** argv){
-    Execve("/bin/ls", argv,NULL);
+    int pipe_fd[2];
+    if(pipe(pipe_fd) < 0){
+        error_quit("error in pipe",__func__);
+    }
+    if(is_argv_pipe(argv)){//it is a pipeline argument.
+        dup2(STDOUT_FILENO,pipe_fd[0]);
+        Execve("/bin/ls", argv,NULL);
+        
+    }else{//not a pipeline argument
+        Execve("/bin/ls", argv,NULL);
+    }
+    
 }
 
 void run_mkdir(char** argv){

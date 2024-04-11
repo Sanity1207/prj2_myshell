@@ -3,7 +3,7 @@
 
 #include "runner_handler.h"
 
-void run_command(char** argv, int bg){
+void run_command(char** argv, int bg,int *read_fd, int *write_fd){
     /**
      * Except cd and exit
     */
@@ -12,6 +12,10 @@ void run_command(char** argv, int bg){
     pid_t pid = Fork();
 
     if(pid==0){ //child process
+        if(is_argv_pipe(argv)){
+            
+        }
+
         if(!strcmp(argv[0],"ls")){
             run_ls(argv);
         }else if(!strcmp(argv[0],"mkdir")){
@@ -28,9 +32,7 @@ void run_command(char** argv, int bg){
                 printf("%s: Command not found.\n", argv[0]);
                 exit(0);
             }
-
         }
-
     }else{//parent process
     	/* Parent waits for foreground job to terminate */
         if (!bg){ 
@@ -41,7 +43,6 @@ void run_command(char** argv, int bg){
         }else{//when there is backgrount process!
             printf("%d\n", pid);
             //TODO: Do you need to print the command line?
-
         }
 
         

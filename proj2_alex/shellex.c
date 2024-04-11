@@ -13,13 +13,21 @@ int main()
 {
     char cmdline[MAXLINE]; /* Command line */
 
+    /**
+     * Initialize custom argument arrays
+    */
+   for (int i = 0; i < MAXARGS; i++) {
+        first_args[i] = NULL;
+        rest_args[i] = NULL;
+    }
+
     while (1) {
 	/* Read */
 	printf("CSE4100-SP-P2> ");                   
 	fgets(cmdline, MAXLINE, stdin); 
 	if (feof(stdin))
 	    exit(0);
-
+        
 	/* Evaluate */
 	eval(cmdline);
     } 
@@ -39,7 +47,7 @@ void eval(char *cmdline)
     if (argv[0] == NULL)  
 	return;   /* Ignore empty lines */
     if (!builtin_command(argv)) { //quit -> exit(0), & -> ignore, other -> run
-        run_command(argv,bg);
+        run_command(argv,bg,NULL,NULL,false);
     }
     
 
