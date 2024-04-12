@@ -37,17 +37,7 @@ void run_cd(char** argv){
 */
 
 void run_ls(char** argv){
-    int pipe_fd[2];
-    if(pipe(pipe_fd) < 0){
-        error_quit("error in pipe",__func__);
-    }
-    if(is_argv_pipe(argv)){//it is a pipeline argument.
-        dup2(STDOUT_FILENO,pipe_fd[0]);
-        Execve("/bin/ls", argv,NULL);
-        
-    }else{//not a pipeline argument
-        Execve("/bin/ls", argv,NULL);
-    }
+    Execve("/bin/ls", argv,NULL);
     
 }
 

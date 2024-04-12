@@ -4,7 +4,8 @@
 #include "../csapp.h"
 #include "runners.h"
 
-void run_command(char** argv, int bg, int* read_fd, int* write_fd);
+void fork_handle_command(command_t* command_ptr);
+void run_command(char** argv);
 
 
 

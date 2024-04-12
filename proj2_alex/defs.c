@@ -13,7 +13,7 @@ void log_force(char* log){
  * first_args: until before |
  * rest_args : rest 
 */
-bool is_argv_pipe(char* argv){
+bool is_argv_pipe(char** argv){
     int i;
     int j;
     bool pipeflag = false;
@@ -31,11 +31,12 @@ bool is_argv_pipe(char* argv){
         for(j=i+1;argv[j]!=NULL;j++){
             rest_args[j] = argv[j];
         }
+        return true;
     }else{
-
+        return false;
     }
 }
-void error_quit(char* msg, char* func_name){
+void error_quit(char* msg, const char* func_name){
     fprintf(stderr,"Error in %s : %s\n",__func__,msg);
     exit(1);
 }

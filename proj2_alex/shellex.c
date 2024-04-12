@@ -42,12 +42,38 @@ void eval(char *cmdline)
     char buf[MAXLINE];   /* Holds modified command line */
     int bg;              /* Should the job run in bg or fg? */
     pid_t pid;           /* Process id */
+    int i;
+
+    /**
+     * Alex created variables
+    */
+    command_t command_struct;
+    int pipe_fd[2];
+
+    /**
+     * Initialize argv
+    */
+    for(i=0;i<MAXARGS;i++){
+        argv[i] = NULL;
+    }
+
+
     strcpy(buf, cmdline);
     bg = parseline(buf, argv); 
     if (argv[0] == NULL)  
 	return;   /* Ignore empty lines */
+
     if (!builtin_command(argv)) { //quit -> exit(0), & -> ignore, other -> run
-        run_command(argv,bg,NULL,NULL,false);
+        if(pipe(pipe_fd) < 0){
+            error_quit("pipe failed",__func__);
+        }
+
+        command_struct.argv = argv;
+        command_struct.pipe_fd = pipe_fd;
+        command_struct.has_prev_input = false;
+        command_struct.bg = bg;
+        fork_handle_command(&command_struct);
+
     }
     
 
