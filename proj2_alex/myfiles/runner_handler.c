@@ -4,19 +4,24 @@
 #include "runner_handler.h"
 
 void fork_handle_command(command_t* command_ptr){
-
+ 
     /**
      * while programming 
     */
     int num_of_pipe = num_of_pipes(command_ptr->argv);
-
-    /**
+   /**
      * Except cd and exit
     */
     int child_status;
     int i;
 
+
+    
+
     pid_t pid = Fork();
+    
+
+
     if(pid>0){ //Parent Process
         if (!command_ptr->bg){ 
             pid_t wpid = Wait(&child_status);
@@ -30,7 +35,7 @@ void fork_handle_command(command_t* command_ptr){
     }else{//child process
         print_args_with_str("child after fork",command_ptr->argv);
 
-        if(command_ptr->has_prev_input){ //has a previous input from another file
+        if(command_ptr->child_has_prev_input){ //has a previous input from another file
             dup2(command_ptr->pipe_fd[0],STDIN_FILENO);
         }else{
             close(command_ptr->pipe_fd[0]); //close the reading end of the pipe
