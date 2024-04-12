@@ -57,5 +57,9 @@ void run_cat(char** argv){
     Execve("/bin/cat",argv,NULL);
 }
 
+void run_grep(char** argv){
+    Execve("/bin/grep",argv,NULL);
+}
+
 
 #endif

@@ -11,5 +11,5 @@ void run_mkdir(char** argv);
 void run_cd(char** argv);
 void run_touch(char** argv);
 void run_cat(char** argv);
-
+void run_grep(char** argv);
 #endif

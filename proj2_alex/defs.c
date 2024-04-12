@@ -41,6 +41,17 @@ void error_quit(char* msg, const char* func_name){
     exit(1);
 }
 
-
+void print_args_with_str(char* str, char** args){
+    int i;
+    printf("'%s' args : ",str);
+    for(i=0;args[i] != NULL;i++){
+        printf("'%s' ",args[i]);
+    }
+    if(i==0){
+        printf("args are empty!\n");
+    }else{
+        printf("\n");
+    }
+}
 
 #endif 
