@@ -54,4 +54,15 @@ void print_args_with_str(char* str, char** args){
     }
 }
 
+int num_of_pipes(char** argv){
+    int i;
+    int cnt = 0;
+    for(int i = 0;argv[i]!= NULL;i++){
+        if(!strcmp(argv[i],"|")){
+            cnt++;
+        }
+    }
+    return cnt;
+}
+
 #endif 

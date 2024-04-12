@@ -47,7 +47,7 @@ void eval(char *cmdline)
     /**
      * Alex created variables
     */
-    command_t command_struct;
+    command_t *command_struct = malloc(sizeof(command_struct));
     int pipe_fd[2];
 
     /**
@@ -68,10 +68,10 @@ void eval(char *cmdline)
             error_quit("pipe failed",__func__);
         }
 
-        command_struct.argv = argv;
-        command_struct.pipe_fd = pipe_fd;
-        command_struct.has_prev_input = false;
-        command_struct.bg = bg;
+        command_struct->argv = argv;
+        command_struct->pipe_fds = malloc(sizeof(int*)*MAXPIPE); //TODO: in each of the fd array needs allocation.
+        command_struct->has_prev_input = false;
+        command_struct->bg = bg; 
         fork_handle_command(&command_struct);
 
     }
