@@ -37,28 +37,28 @@ void run_cd(char** argv){
 */
 
 void run_ls(char** argv){
-    Execve("/bin/ls", argv,NULL);
+    Execve("/bin/ls", argv,environ);
     
 }
 
 void run_mkdir(char** argv){
-    Execve("/bin/mkdir",argv,NULL);
+    Execve("/bin/mkdir",argv,environ);
 }
 
 void run_rmdir(char** argv){
-    Execve("/bin/rmdir",argv,NULL);
+    Execve("/bin/rmdir",argv,environ);
 }
 
 void run_touch(char** argv){
-    Execve("/usr/bin/touch",argv,NULL);
+    Execve("/usr/bin/touch",argv,environ);
 }
 
 void run_cat(char** argv){
-    Execve("/bin/cat",argv,NULL);
+    Execve("/bin/cat",argv,environ);
 }
 
 void run_grep(char** argv){
-    Execve("/bin/grep",argv,NULL);
+    Execve("/bin/grep",argv,environ);
 }
 
 

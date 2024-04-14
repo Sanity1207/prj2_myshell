@@ -2,9 +2,15 @@
 #define DEFS_C
 #include "defs.h"
 
-void log_force(char* log){
-    printf("%s\n",log);
-    fflush(stdout);
+void log_force(char* log) {
+    int fd = open("/dev/tty", O_WRONLY);
+    if (fd == -1) {
+        perror("open /dev/tty");
+        return;
+    }
+    
+    dprintf(fd, "%s\n", log);
+    close(fd);
 }
 
 /**
