@@ -13,29 +13,6 @@ void log_force(char* log){
  * first_args: until before |
  * rest_args : rest 
 */
-bool is_argv_pipe(char** argv){
-    int i;
-    int j;
-    bool pipeflag = false;
-    
-    for(i=0;argv[i] != NULL;i++){
-        if(!strcmp(argv[i],"|")){ //there is a pipeline
-            pipeflag = true;
-            break;
-        }
-    }
-    if(pipeflag){
-        for(j=0;j<i;j++){
-            first_args[j] = argv[j];
-        }
-        for(j=i+1;argv[j]!=NULL;j++){
-            rest_args[j] = argv[j];
-        }
-        return true;
-    }else{
-        return false;
-    }
-}
 void error_quit(char* msg, const char* func_name){
     fprintf(stderr,"Error in %s : %s\n",__func__,msg);
     exit(1);

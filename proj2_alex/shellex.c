@@ -13,14 +13,6 @@ int main()
 {
     char cmdline[MAXLINE]; /* Command line */
 
-    /**
-     * Initialize custom argument arrays
-    */
-   for (int i = 0; i < MAXARGS; i++) {
-        first_args[i] = NULL;
-        rest_args[i] = NULL;
-    }
-
     while (1) {
 	/* Read */
 	printf("CSE4100-SP-P2> ");                   
@@ -48,8 +40,7 @@ void eval(char *cmdline)
      * Alex created variables
     */
     command_t *command_struct = malloc(sizeof(command_struct));
-    int pipe_fd[2];
-
+    int origin_num_of_pipes = 0;
     /**
      * Initialize argv
     */
@@ -64,16 +55,9 @@ void eval(char *cmdline)
 	return;   /* Ignore empty lines */
 
     if (!builtin_command(argv)) { //quit -> exit(0), & -> ignore, other -> run
-        if(pipe(pipe_fd) < 0){
-            error_quit("pipe failed",__func__);
-        }
-
         command_struct->argv = argv;
-        command_struct->pipe_fds = malloc(sizeof(int*)*MAXPIPE); //TODO: in each of the fd array needs allocation.
-        command_struct->has_prev_input = false;
         command_struct->bg = bg; 
-        fork_handle_command(&command_struct);
-
+        fork_handle_command(command_struct);
     }
     
 
