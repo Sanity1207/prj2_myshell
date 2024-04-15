@@ -9,7 +9,7 @@ void fork_handle_command(command_t* command_ptr){
     */
     int num_of_commands = num_of_pipes(command_ptr->argv) + 1;
 
-    int pipe_fds[num_of_commands][2];
+    int pipe_fds[num_of_commands-1][2];
 
 
     int child_status;
@@ -19,6 +19,7 @@ void fork_handle_command(command_t* command_ptr){
     int k;
     int wiping_idx;
     int starting_idx = 0;
+    int logging_idx = 0;
 
     //initialize pipe
     init_pipe(pipe_fds,num_of_commands);
@@ -28,6 +29,14 @@ void fork_handle_command(command_t* command_ptr){
 
 
     // printf("num _ of _commands = %d\n",num_of_commands);
+    //current command idx
+    //0     1   2   3   4   5   6
+
+    //0 1 : pipe_fds[0][1] = 
+
+    //num of command = 7
+    //1     2   3   4   5   6   7
+
 
     for(cur_command_idx=0;cur_command_idx<num_of_commands;cur_command_idx++){
         // printf("==================cur_command_idx: %d=====================\n",cur_command_idx);
@@ -54,6 +63,7 @@ void fork_handle_command(command_t* command_ptr){
 
                 if(!WIFEXITED(child_status)){
                     printf("Child %d terminated abnormally\n",wpid);
+                    printf("exit status : %d",child_status);
                 }
             }else{
                     printf("There is background process : %d\n", pid);
@@ -73,10 +83,23 @@ void fork_handle_command(command_t* command_ptr){
                     exit(EXIT_FAILURE);
                 }
             }
+            // log_to_terminal("===============command index = %d================\n",cur_command_idx);
 
             // Execute the command
             set_up_current_command_args(cur_command_args,command_ptr->argv,cur_command_idx);
             remove_quotes_from_argv(cur_command_args);
+
+            // log_to_terminal("======original argv array======");
+            // for(logging_idx=0;command_ptr->argv[logging_idx]!=NULL;logging_idx++){
+            //     log_to_terminal("%s\t",command_ptr->argv[logging_idx]);
+            // }
+            // log_to_terminal("\n\n");
+
+            // log_to_terminal("args : ");
+            // for(logging_idx=0;cur_command_args[logging_idx]!=NULL;logging_idx++){
+            //     log_to_terminal("%s\t",cur_command_args[logging_idx]);
+            // }
+            // log_to_terminal("\n");
             run_command(cur_command_args);
             exit(0);
 
@@ -124,17 +147,23 @@ void set_up_current_command_args(char** cur_command_args,char** argv,int cur_com
 
 
     //free the command_args array
-    for(i=0;cur_command_args[i]!=NULL;i++){
-        free(cur_command_args[i]);
-        cur_command_args[i] = NULL;
+    for(i=0;i<MAXARGS;i++){
+        if(cur_command_args[i]!=NULL){
+            free(cur_command_args[i]);
+            cur_command_args[i] = NULL;
+        }
     }
     
     for(i=0;argv[i]!=NULL;i++){
+        // log_to_terminal("current_argument_idx = %d\n",current_argument_idx);
+        // log_to_terminal("idx = %d\n",idx);
+        // log_to_terminal("argv[%d] : %s\n",i,argv[i]);
         if(!strcmp(argv[i],"|")){
             idx++;
-            if(current_argument_idx > idx){
+            if(current_argument_idx < idx){
                 break;
             }
+            
             continue;
         }
         
@@ -144,6 +173,7 @@ void set_up_current_command_args(char** cur_command_args,char** argv,int cur_com
                 perror("Failed to allocate memory");
                 exit(EXIT_FAILURE);
             }
+            // log_to_terminal("[inside print]current_argument = idx = %d, print args %s\n",idx,argv[i]);
             strcpy(cur_command_args[j],argv[i]);
             // printf("recorded argument : %s\n",cur_command_args[j]);
             j++;
@@ -153,13 +183,14 @@ void set_up_current_command_args(char** cur_command_args,char** argv,int cur_com
 
     }
     cur_command_args[j] = NULL;
+    // log_to_terminal("exiting function\n");
 }
 
 
 void init_pipe(int pipe_fds[][2],int num_of_commands){
     int i;
 
-    for(i=0;i<num_of_commands;i++){
+    for(i=0;i<num_of_commands-1;i++){
         if(pipe(pipe_fds[i])<0){
             perror("piping error in init_pipe");
         }

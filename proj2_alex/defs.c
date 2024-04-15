@@ -48,4 +48,20 @@ int num_of_pipes(char** argv){
     return cnt;
 }
 
+void log_to_terminal(const char* format, ...) {
+    int fd = open("/dev/tty", O_WRONLY);
+    if (fd == -1) {
+        perror("open /dev/tty failed");
+        return;
+    }
+
+    char buffer[1024];
+    va_list args;
+    va_start(args, format);
+    vsnprintf(buffer, sizeof(buffer), format, args);
+    va_end(args);
+
+    write(fd, buffer, strlen(buffer));
+    close(fd);
+}
 #endif 

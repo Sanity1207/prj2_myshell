@@ -16,5 +16,6 @@ bool is_argv_pipe(char** argv);
 void error_quit(char* msg, const char* func_name);
 void print_args_with_str(char* str, char** args);
 int num_of_pipes(char** argv);
+void log_to_terminal(const char* format, ...);
 
 #endif 
