@@ -24,7 +24,7 @@ void fork_handle_command(command_t* command_ptr){
     init_pipe(pipe_fds,num_of_commands);
 
     //initialize cur_command_args
-    nullify_str_arr(cur_command_args);
+    nullify_str_arr(cur_command_args,MAXARGS);
 
 
     // printf("num _ of _commands = %d\n",num_of_commands);
@@ -76,6 +76,7 @@ void fork_handle_command(command_t* command_ptr){
 
             // Execute the command
             set_up_current_command_args(cur_command_args,command_ptr->argv,cur_command_idx);
+            remove_quotes_from_argv(cur_command_args);
             run_command(cur_command_args);
             exit(0);
 
@@ -89,30 +90,23 @@ void fork_handle_command(command_t* command_ptr){
 }
 
 void run_command(char** argv){
-    //TODO: 파일의 경로를 통해 execvp 를 자동으로 실행하게 하기
-    //TODO: environmental variable 이 대체 무엇인지 알아내기
+    char command_name[10];
+    char bin_path[30];
+    char usr_bin_path[30];
 
-    if(!strcmp(argv[0],"ls")){
-            run_ls(argv);
-    }else if(!strcmp(argv[0],"mkdir")){
-            run_mkdir(argv);
-    }else if(!strcmp(argv[0],"rmdir")){
-            run_rmdir(argv);
-    }else if(!strcmp(argv[0],"cat")){
-            run_cat(argv);
-    }else if(!strcmp(argv[0],"touch")){
-            run_touch(argv);
-    }else if (!strcmp(argv[0],"grep")){
-            run_grep(argv);
-    }
-    else{
-            if(execve(argv[0], argv, environ) < 0) {	//ex) /bin/ls ls -al &
-                printf("%s: Command not found.\n", argv[0]);
-                exit(0);
-            }
-        }
-
+    int i;
     
+    //1. fetch the first argument and make a path.
+    strcpy(command_name,argv[0]);
+
+    strcpy(bin_path,"/bin/");
+    strcpy(usr_bin_path,"/usr/bin/");
+
+    strcat(bin_path,command_name);
+    strcat(usr_bin_path,command_name);
+
+    execvp(bin_path,argv);
+    execvp(usr_bin_path,argv);
 }
 
 
@@ -172,10 +166,10 @@ void init_pipe(int pipe_fds[][2],int num_of_commands){
     }
 }
 
-//do not free. just nullify the whole array size of maxargs
-void nullify_str_arr(char** cur_command_args){
+//do not free. just nullify the whole array size: param size
+void nullify_str_arr(char** cur_command_args,int size){
     int i;
-    for(i=0;i<MAXARGS;i++){
+    for(i=0;i<size;i++){
         cur_command_args[i] = NULL;
     }
 }
@@ -196,6 +190,26 @@ void copy_str_args(char** dest,char** src){
         strcpy(dest[i],src[i]);
     }
 }
+
+void remove_quotes_from_argv(char** argv){
+    int i = 0;
+    int j = 0;
+    int c;
+    char arg_new[100];
+    for(i=0;argv[i]!=NULL;i++){
+        c=0;
+        for(j=0;j < strlen(argv[i]);j++){
+            if(argv[i][j] != '\"'){
+                arg_new[c] = argv[i][j];
+                c++;
+            }
+        }
+        arg_new[c] = '\0';
+        strcpy(argv[i],arg_new);
+        strcpy(arg_new,"\0");
+    }
+}
+
 
 
 /***
