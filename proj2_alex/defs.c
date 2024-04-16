@@ -64,4 +64,17 @@ void log_to_terminal(const char* format, ...) {
     write(fd, buffer, strlen(buffer));
     close(fd);
 }
+
+void remove_first_two_letters(char* buf){
+    int i = 0;
+    for(i=2;buf[i];i++){
+        buf[i-2] = buf[i];
+    }
+    
+    if(i!=2){
+        buf[i-1] = '\0';
+    }
+}
+
+
 #endif 

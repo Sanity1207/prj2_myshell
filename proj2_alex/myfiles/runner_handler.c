@@ -27,17 +27,6 @@ void fork_handle_command(command_t* command_ptr){
     //initialize cur_command_args
     nullify_str_arr(cur_command_args,MAXARGS);
 
-
-    // printf("num _ of _commands = %d\n",num_of_commands);
-    //current command idx
-    //0     1   2   3   4   5   6
-
-    //0 1 : pipe_fds[0][1] = 
-
-    //num of command = 7
-    //1     2   3   4   5   6   7
-
-
     for(cur_command_idx=0;cur_command_idx<num_of_commands;cur_command_idx++){
         // printf("==================cur_command_idx: %d=====================\n",cur_command_idx);
         pid_t pid = Fork();
@@ -68,6 +57,7 @@ void fork_handle_command(command_t* command_ptr){
             }else{
                     printf("There is background process : %d\n", pid);
                     //TODO: Do you need to print the command line?
+                    add_job(pid,command_ptr->command);
             }
         }else if (pid == 0) {  // Child process
             // Setup redirection
@@ -83,23 +73,12 @@ void fork_handle_command(command_t* command_ptr){
                     exit(EXIT_FAILURE);
                 }
             }
-            // log_to_terminal("===============command index = %d================\n",cur_command_idx);
 
             // Execute the command
             set_up_current_command_args(cur_command_args,command_ptr->argv,cur_command_idx);
             remove_quotes_from_argv(cur_command_args);
 
-            // log_to_terminal("======original argv array======");
-            // for(logging_idx=0;command_ptr->argv[logging_idx]!=NULL;logging_idx++){
-            //     log_to_terminal("%s\t",command_ptr->argv[logging_idx]);
-            // }
-            // log_to_terminal("\n\n");
 
-            // log_to_terminal("args : ");
-            // for(logging_idx=0;cur_command_args[logging_idx]!=NULL;logging_idx++){
-            //     log_to_terminal("%s\t",cur_command_args[logging_idx]);
-            // }
-            // log_to_terminal("\n");
             run_command(cur_command_args);
             exit(0);
 
@@ -119,9 +98,31 @@ void run_command(char** argv){
 
     int i;
     
-    //1. fetch the first argument and make a path.
+
+
+
+
+    //1. fetch the first argument
     strcpy(command_name,argv[0]);
 
+    //2. check if the command wants to run some exec file
+    if(command_name[0] == '.' && command_name[1] == '/'){
+        execv(command_name,argv);
+    }
+
+    //3. check if the command needs to be custom handled.
+
+    if(!strcmp(command_name,"jobs")){
+        printf("listing jobs\n");
+        list_jobs();
+    }
+
+
+
+
+
+
+    //4. make a path with the argument
     strcpy(bin_path,"/bin/");
     strcpy(usr_bin_path,"/usr/bin/");
 
@@ -155,9 +156,6 @@ void set_up_current_command_args(char** cur_command_args,char** argv,int cur_com
     }
     
     for(i=0;argv[i]!=NULL;i++){
-        // log_to_terminal("current_argument_idx = %d\n",current_argument_idx);
-        // log_to_terminal("idx = %d\n",idx);
-        // log_to_terminal("argv[%d] : %s\n",i,argv[i]);
         if(!strcmp(argv[i],"|")){
             idx++;
             if(current_argument_idx < idx){
@@ -173,17 +171,11 @@ void set_up_current_command_args(char** cur_command_args,char** argv,int cur_com
                 perror("Failed to allocate memory");
                 exit(EXIT_FAILURE);
             }
-            // log_to_terminal("[inside print]current_argument = idx = %d, print args %s\n",idx,argv[i]);
             strcpy(cur_command_args[j],argv[i]);
-            // printf("recorded argument : %s\n",cur_command_args[j]);
             j++;
         }
-        
-
-
     }
     cur_command_args[j] = NULL;
-    // log_to_terminal("exiting function\n");
 }
 
 
@@ -242,48 +234,5 @@ void remove_quotes_from_argv(char** argv){
 }
 
 
-
-/***
- * Deprecated
-*/
-
-//The first command arguments of the rest_command_args goes into cur_command args
-//and is removed from rest_command_args
-void set_up_command_args(char** cur_command_args,char** rest_command_args,int* starting_idx){
-    int i;
-    int j=0;
-    //free all memory from cur_command_args
-    for(i=0;cur_command_args[i]!=NULL;i++){
-        free(cur_command_args[i]);
-        cur_command_args[i] = NULL; 
-    }
-    printf("starting idx start= %d\n",*starting_idx);
-    
-    //set up first command
-    for(i=(*starting_idx);rest_command_args[i] != NULL && strcmp(rest_command_args[i], "|") != 0;i++){
-        cur_command_args[j] = malloc(strlen(rest_command_args[i]) + 1);
-        if (cur_command_args[j] == NULL) {
-            perror("Failed to allocate memory");
-            exit(EXIT_FAILURE);
-        }
-        strcpy(cur_command_args[j], rest_command_args[i]);
-        j++;
-    }
-    cur_command_args[j] = NULL;
-    *starting_idx = i+1; 
-    printf("starting idx end= %d\n",*starting_idx);
-}
-
-void init_command_args(char** cur_command_args,char** rest_command_args,char** argv){
-    int i;
-    for(i=0;i<MAXARGS;i++){
-        cur_command_args[i] = NULL;
-        rest_command_args[i] = NULL;
-    }
-    for(i=0;argv[i]!=NULL;i++){
-        rest_command_args[i] = malloc(strlen(argv[i])+1);
-        strcpy(rest_command_args[i],argv[i]);
-    }
-}
 
 #endif

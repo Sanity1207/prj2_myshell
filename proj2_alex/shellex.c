@@ -19,6 +19,11 @@ int main()
 	fgets(cmdline, MAXLINE, stdin); 
 	if (feof(stdin))
 	    exit(0);
+    /**
+     * Alex set up variables
+    */
+    job_list = NULL;
+    num_of_jobs = 0;
         
 	/* Evaluate */
 	eval(cmdline);
@@ -40,7 +45,7 @@ void eval(char *cmdline)
      * Alex created variables
     */
     command_t *command_struct = malloc(sizeof(command_struct));
-    int origin_num_of_pipes = 0;
+    command_struct->command = NULL;
     /**
      * Initialize argv
     */
@@ -53,6 +58,11 @@ void eval(char *cmdline)
     bg = parseline(buf, argv); 
     if (argv[0] == NULL)  
 	return;   /* Ignore empty lines */
+
+    if(bg){//there is background process, need to access commandline.
+        command_struct->command = malloc(MAXLINE);
+        strcpy(command_struct->command, cmdline);
+    }
 
     if (!builtin_command(argv)) { //quit -> exit(0), & -> ignore, other -> run
         command_struct->argv = argv;
@@ -84,6 +94,7 @@ int builtin_command(char **argv)
 /* parseline - Parse the command line and build the argv array */
 int parseline(char *buf, char **argv) 
 {
+    int bgIdx;
     char *delim;         /* Points to first space delimiter */
     int argc;            /* Number of args */
     int bg;              /* Background job? */
@@ -105,10 +116,19 @@ int parseline(char *buf, char **argv)
     
     if (argc == 0)  /* Ignore blank line */
 	return 1;
+    
+    // check for & right after string without space.
+    bgIdx = strlen(argv[argc-1])-1;
+    if((argv[argc-1])[bgIdx] == '&'){
+        (argv[argc-1])[bgIdx] = '\0';
+        return 1;
+    }
+
 
     /* Should the job run in the background? */
     if ((bg = (*argv[argc-1] == '&')) != 0)
 	argv[--argc] = NULL;
+
 
     return bg;
 }
