@@ -18,8 +18,10 @@ typedef struct job {
     struct job *next;
 } job_t;
 
+//phase 3 variables
 job_t *job_list;
 int num_of_jobs;
+int pid_pipe[2];
 
 
 void log_force(char* log);

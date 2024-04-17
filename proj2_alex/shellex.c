@@ -11,7 +11,10 @@ int builtin_command(char **argv);
 
 int main() 
 {
+    
     char cmdline[MAXLINE]; /* Command line */
+    job_list = NULL;
+    num_of_jobs = 0;
 
     while (1) {
 	/* Read */
@@ -22,9 +25,8 @@ int main()
     /**
      * Alex set up variables
     */
-    job_list = NULL;
-    num_of_jobs = 0;
-        
+
+    // print_job_list("main");
 	/* Evaluate */
 	eval(cmdline);
     } 

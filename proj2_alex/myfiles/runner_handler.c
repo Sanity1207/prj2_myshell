@@ -9,7 +9,11 @@ void fork_handle_command(command_t* command_ptr){
     */
     int num_of_commands = num_of_pipes(command_ptr->argv) + 1;
 
+    //phase 2 piping 
     int pipe_fds[num_of_commands-1][2];
+
+    //phase 3 piping
+    int pid_pipe[2];
 
 
     int child_status;
@@ -23,6 +27,10 @@ void fork_handle_command(command_t* command_ptr){
 
     //initialize pipe
     init_pipe(pipe_fds,num_of_commands);
+    if(pipe(pid_pipe)<0){
+        perror("piping error for pid_pipe");
+        exit(1);
+    }
 
     //initialize cur_command_args
     nullify_str_arr(cur_command_args,MAXARGS);
@@ -31,7 +39,8 @@ void fork_handle_command(command_t* command_ptr){
         // printf("==================cur_command_idx: %d=====================\n",cur_command_idx);
         pid_t pid = Fork();
         if(pid>0){ //Parent Process
-            if (!command_ptr->bg){ 
+            // print_job_list("right after fork (parent)");
+            if (!command_ptr->bg){ //no background process
                 pid_t wpid = Wait(&child_status);
                 if(cur_command_idx != 0){//not the first command
                     close(pipe_fds[cur_command_idx-1][0]); //close read end of the pipe that Iused
@@ -54,10 +63,8 @@ void fork_handle_command(command_t* command_ptr){
                     printf("Child %d terminated abnormally\n",wpid);
                     printf("exit status : %d",child_status);
                 }
-            }else{
-                    printf("There is background process : %d\n", pid);
-                    //TODO: Do you need to print the command line?
-                    add_job(pid,command_ptr->command);
+            }else{ //background process
+                add_job(pid,command_ptr->command);
             }
         }else if (pid == 0) {  // Child process
             // Setup redirection

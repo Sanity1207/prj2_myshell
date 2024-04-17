@@ -5,5 +5,6 @@
 
 void add_job(pid_t pid, const char *command);
 void list_jobs();
+void print_job_list(char* location);
 
 #endif
