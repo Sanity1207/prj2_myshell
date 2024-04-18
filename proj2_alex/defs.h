@@ -15,6 +15,12 @@
 #define SIG_SETMASK        2        /* for setting the signal mask */
 #endif
 
+typedef enum {
+    CURRENT,
+    PREVIOUS,
+    NORMAL,
+} RecencyEnum;
+
 
 
 typedef struct{
@@ -30,11 +36,13 @@ typedef struct job {
     char command[MAXLINE];
     struct job *next;
     struct job *prev;
+    RecencyEnum recency;
+    char process_state[10];
 } job_t;
 
 //phase 3 variables
 job_t *job_list_front;
-int num_of_jobs;
+int id_for_next_job;
 int pid_pipe[2];
 
 

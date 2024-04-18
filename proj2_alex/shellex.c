@@ -14,7 +14,7 @@ int main()
     
     char cmdline[MAXLINE]; /* Command line */
     job_list_front = NULL;
-    num_of_jobs = 0;
+    id_for_next_job = 1;
 
     struct sigaction sa_sigchld;
     struct sigaction oldaction_sigchld;
@@ -80,7 +80,7 @@ void eval(char *cmdline)
         command_struct->command = malloc(MAXLINE);
         strcpy(command_struct->command, cmdline);
     }else{
-        log_to_terminal("not background process\n");
+        // log_to_terminal("not background process\n");
     }
 
     if (!builtin_command(argv)) { //quit -> exit(0), & -> ignore, other -> run

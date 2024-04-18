@@ -5,10 +5,15 @@
 
 void add_job(pid_t pid, const char *command) {
     job_t *new_job = Malloc(sizeof(job_t));
-    log_force("inside add_job\n");
+    // log_force("inside add_job\n");
+
+    job_t *current_job;
 
     new_job->pid = pid;
-    new_job->job_id = num_of_jobs+1;
+    new_job->job_id = id_for_next_job;
+    new_job->recency = CURRENT;
+    strcpy(new_job->process_state,"RUNNING");
+    
 
     strcpy(new_job->command, command);
 
@@ -18,24 +23,51 @@ void add_job(pid_t pid, const char *command) {
         new_job->prev = NULL;
         job_list_front = new_job;
     }else{
-        new_job->next = job_list_front;
-        new_job->prev = NULL;
-        job_list_front->prev = new_job;
-        job_list_front = new_job;
+        current_job = job_list_front;
+        while(current_job->next != NULL){
+            if(current_job->recency == CURRENT){
+                current_job->recency = PREVIOUS;
+            }else if (current_job->recency == PREVIOUS){
+                current_job->recency = NORMAL;
+            }
+            current_job = current_job->next;
+        }
+
+        //the next node of currentjob is null.
+        current_job->next = new_job;
+        new_job->prev = current_job;
+
     }
-    num_of_jobs++;
+    id_for_next_job++;
 
 }
 
-void list_jobs() {
+void list_jobs(char* option) {
     job_t *current_job = job_list_front;
-    if(current_job == NULL){
-        printf("there is no job to print\n");
+    char recency_char;
+
+    if(current_job->recency == CURRENT){
+        recency_char = '+';
+    }else if (current_job->recency == PREVIOUS){
+        recency_char = '-';
+    }else{
+        recency_char = ' ';
     }
-    while (current_job != NULL) {
-        printf("[%d] %d %s\n", current_job->job_id, current_job->pid, current_job->command);
-        current_job = current_job->next;
+
+
+    if(option == NULL){
+        fflush(stdout);
+        while (current_job != NULL) {
+            printf("[%d]%c %s\t\t%s",current_job->job_id,recency_char,current_job->process_state,current_job->command);
+            current_job = current_job->next;
+        }
+    }else if(!strcmp(option,"-l")){
+        while (current_job != NULL) {
+            printf("[%d]%c %d %s\t\t%s",current_job->job_id,recency_char,current_job->pid,current_job->process_state,current_job->command);
+            current_job = current_job->next;
+        }
     }
+
 }
 
 void print_job_list(char* location){
@@ -43,7 +75,7 @@ void print_job_list(char* location){
         printf("in [%s] : job_list is null\n",location);
     }else{
         printf("in [%s] : job_list is not null\n",location);
-        list_jobs();
+        list_jobs(NULL);
     }
 }
 
@@ -80,20 +112,20 @@ void unblock_signal(int signum){
 //2. erase the background process from the job list
 void sigchld_handler_for_bg(int signum){
 
-    log_to_terminal("signal %d received\n",signum);
+    // log_to_terminal("signal %d received\n",signum);
 
     // log_to_terminal("inside signal handler for bg\n");
     int saved_errno = errno;
     int status;
 
     pid_t pid_bg;
-    while((pid_bg = waitpid(-1,&status,WNOHANG)) > 0){ //reaped something
+    while((pid_bg = waitpid(-1,&status,WNOHANG)) > 0){ // 0이면 탈출한다.
         delete_from_job_list(pid_bg);
-        log_to_terminal("inside signal handler reaped process %d\n",pid_bg);
+        // log_to_terminal("inside signal handler reaped process %d\n",pid_bg);
     }
 
     if (pid_bg == 0) {
-        log_to_terminal("no more children to reap - sighandler\n");
+        // log_to_terminal("no more children to reap - sighandler\n");
     } else if (pid_bg < 0 && errno != ECHILD) {
         perror("waitpid in handler");
     }
@@ -108,9 +140,7 @@ void delete_from_job_list(pid_t pid){
     job_t* current_job = job_list_front;
     job_t* prev_job = NULL;
     job_t* next_job = NULL;
-
-    log_to_terminal("inside job_list \n");
-    log_to_terminal("delete [%d] from job list ",pid);
+    
     if(job_list_front == NULL){ //list is empty
         return;
     }
@@ -119,6 +149,10 @@ void delete_from_job_list(pid_t pid){
         if(current_job->pid == pid){
             prev_job = current_job->prev;
             next_job = current_job->next;
+            if(next_job == NULL){//must decrement id for next
+                id_for_next_job--;
+            }
+
             if(prev_job == NULL){//first element in the list
                 if(next_job == NULL){//also last element in the list
                     job_list_front = NULL;
@@ -133,11 +167,12 @@ void delete_from_job_list(pid_t pid){
                 prev_job->next = next_job;
                 next_job->prev = prev_job;
             }
+
             free(current_job);
             current_job = NULL;
-
-            num_of_jobs--;
+            // log_to_terminal("deleted [%d] from job list \n",pid);
             break;
+            
         }
         
         current_job = current_job->next;

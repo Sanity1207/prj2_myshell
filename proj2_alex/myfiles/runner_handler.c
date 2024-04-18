@@ -44,14 +44,14 @@ void fork_handle_command(command_t* command_ptr){
     
     //phase 4
     if(command_ptr->already_added == true){
-            log_to_terminal("already added before the fork\n");
+            // log_to_terminal("already added before the fork\n");
     }else{
-            log_to_terminal("not already added\n");
+            // log_to_terminal("not already added\n");
     }
     for(cur_command_idx=0;cur_command_idx<num_of_commands;cur_command_idx++){
         //phase 3 : Block Sigchild signal 
         block_signal(SIGCHLD);
-        log_to_terminal("start of for loop - fork handle command\n");
+        // log_to_terminal("start of for loop - fork handle command\n");
 
 
         pid_t pid = Fork();
@@ -78,12 +78,14 @@ void fork_handle_command(command_t* command_ptr){
                 pid_t wpid;
                 int status;
                 // log_to_terminal("I am inside forground child's parent\n");
+                // log_to_terminal("=====================================================\n");
                 if((wpid = waitpid(pid,&status,0)) > 0){
-                    log_to_terminal("the pid for reaping : %d\n",pid);
-                    log_to_terminal("reaped child %d - parent process\n",wpid);
+                    // log_to_terminal("the pid for reaping : %d\n",pid);
+                    // log_to_terminal("reaped child %d - parent process\n",wpid);
                 }
+                // log_to_terminal("=====================================================\n");
                 if(wpid == 0){
-                    log_to_terminal("no more children to reap - parent process");
+                    // log_to_terminal("no more children to reap - parent process");
                 }
                 if (wpid == -1 && errno != ECHILD) {
                     perror("waitpid failed");
@@ -97,17 +99,17 @@ void fork_handle_command(command_t* command_ptr){
             }else{ //background process
 
                 //prevent duplicate addition to joblist
-                if(command_ptr->already_added == false){
+                if(command_ptr->already_added == false && cur_command_idx == num_of_commands-1){ //last command
                     add_job(pid,command_ptr->command);
                     command_ptr->already_added = true;
-                    log_to_terminal("added job %s\n",command_ptr->command);
+                    // log_to_terminal("added job %s\n",command_ptr->command);
                 }else{
-                    log_to_terminal("already added job %s\n",command_ptr->command);
+                    // log_to_terminal("already added job %s\n",command_ptr->command);
                 }
                 
-                unblock_signal(SIGCHLD);
+                // unblock_signal(SIGCHLD);
             }
-            log_to_terminal("end of parent process \n");
+            // log_to_terminal("end of parent process \n");
         }else if (pid == 0) {  // Child process
             // Setup redirection
             if (cur_command_idx != 0) {  // Not the first command
@@ -136,13 +138,18 @@ void fork_handle_command(command_t* command_ptr){
         }else{
             perror("fork");
         }
-    }    
+    }
+    unblock_signal(SIGCHLD);    
 }
 
 void run_command(char** argv){
     char command_name[100];
     char bin_path[30];
     char usr_bin_path[30];
+
+    pid_t fg_job_pid;
+    int status;
+    int result;
 
     int i;
     
@@ -160,17 +167,27 @@ void run_command(char** argv){
 
     if(!strcmp(command_name,"jobs")){
         // printf("listing jobs\n");
-        list_jobs();
+        list_jobs(argv[1]);
+        return;
     }
 
-    if(!strcmp(command_name,"kill")){
-        //0. write to the pipe the pid of the process being erased
-        pid_t kill_pid = atoi(argv[1]);
-        //1. send a signal to the parent to erase the list of "pid"
+    //TODO: fix job id
+    if(!strcmp(command_name,"fg")){
+        fg_job_pid = atoi(argv[1]);
+        printf("fg_job_pid : %d\n",fg_job_pid);
 
-        //2. kill the pid process
-
-        //3. exit
+        do{
+            result = waitpid(fg_job_pid,&status,WUNTRACED);
+            if(result == -1){
+                if (errno == EINTR) {
+                    continue;  
+                }
+                perror("waitpid");
+                break;
+            }
+        }while (!WIFEXITED(status) && !WIFSIGNALED(status));
+        
+        return;
     }
 
 
@@ -184,6 +201,8 @@ void run_command(char** argv){
 
     execvp(bin_path,argv);
     execvp(usr_bin_path,argv);
+
+    printf("%s: command not found\n",command_name);
 }
 
 
