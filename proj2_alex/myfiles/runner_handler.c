@@ -3,7 +3,12 @@
 
 #include "runner_handler.h"
 
+
+
 void fork_handle_command(command_t* command_ptr){
+    
+    //phase 3 programming
+    unblock_signal(SIGCHLD);
     /**
      * while programming 
     */
@@ -35,14 +40,25 @@ void fork_handle_command(command_t* command_ptr){
     //initialize cur_command_args
     nullify_str_arr(cur_command_args,MAXARGS);
 
+    //phase 3
+    
+    //phase 4
+    if(command_ptr->already_added == true){
+            log_to_terminal("already added before the fork\n");
+    }else{
+            log_to_terminal("not already added\n");
+    }
     for(cur_command_idx=0;cur_command_idx<num_of_commands;cur_command_idx++){
-        // printf("==================cur_command_idx: %d=====================\n",cur_command_idx);
+        //phase 3 : Block Sigchild signal 
+        block_signal(SIGCHLD);
+        log_to_terminal("start of for loop - fork handle command\n");
+
+
         pid_t pid = Fork();
+
+
         if(pid>0){ //Parent Process
-            // print_job_list("right after fork (parent)");
-            if (!command_ptr->bg){ //no background process
-                pid_t wpid = Wait(&child_status);
-                if(cur_command_idx != 0){//not the first command
+            if(cur_command_idx != 0){//not the first command
                     close(pipe_fds[cur_command_idx-1][0]); //close read end of the pipe that Iused
                 }
 
@@ -58,14 +74,39 @@ void fork_handle_command(command_t* command_ptr){
                         }
                     }
                 }
+            if (!command_ptr->bg){ //command is not background process;
+                pid_t wpid;
+                int status;
+                // log_to_terminal("I am inside forground child's parent\n");
+                if((wpid = waitpid(-1,&status,0)) > 0){
+                    log_to_terminal("reaped child %d - parent process\n",wpid);
+                }
+                if(wpid == 0){
+                    log_to_terminal("no more children to reap - parent process");
+                }
+                if (wpid == -1 && errno != ECHILD) {
+                    perror("waitpid failed");
+                }
+                unblock_signal(SIGCHLD);
 
                 if(!WIFEXITED(child_status)){
                     printf("Child %d terminated abnormally\n",wpid);
                     printf("exit status : %d",child_status);
                 }
             }else{ //background process
-                add_job(pid,command_ptr->command);
+
+                //prevent duplicate addition to joblist
+                if(command_ptr->already_added == false){
+                    add_job(pid,command_ptr->command);
+                    command_ptr->already_added = true;
+                    log_to_terminal("added job %s\n",command_ptr->command);
+                }else{
+                    log_to_terminal("already added job %s\n",command_ptr->command);
+                }
+                
+                unblock_signal(SIGCHLD);
             }
+            log_to_terminal("end of parent process \n");
         }else if (pid == 0) {  // Child process
             // Setup redirection
             if (cur_command_idx != 0) {  // Not the first command
@@ -85,7 +126,6 @@ void fork_handle_command(command_t* command_ptr){
             set_up_current_command_args(cur_command_args,command_ptr->argv,cur_command_idx);
             remove_quotes_from_argv(cur_command_args);
 
-
             run_command(cur_command_args);
             exit(0);
 
@@ -99,14 +139,12 @@ void fork_handle_command(command_t* command_ptr){
 }
 
 void run_command(char** argv){
-    char command_name[10];
+    char command_name[100];
     char bin_path[30];
     char usr_bin_path[30];
 
     int i;
     
-
-
 
 
     //1. fetch the first argument
@@ -120,12 +158,19 @@ void run_command(char** argv){
     //3. check if the command needs to be custom handled.
 
     if(!strcmp(command_name,"jobs")){
-        printf("listing jobs\n");
+        // printf("listing jobs\n");
         list_jobs();
     }
 
+    if(!strcmp(command_name,"kill")){
+        //0. write to the pipe the pid of the process being erased
+        pid_t kill_pid = atoi(argv[1]);
+        //1. send a signal to the parent to erase the list of "pid"
 
+        //2. kill the pid process
 
+        //3. exit
+    }
 
 
 

@@ -1,6 +1,7 @@
 #ifndef RUNNER_HANDLER_H
 #define RUNNER_HANDLER_H
 
+#include "../defs.h"  
 #include "../csapp.h"
 #include "runners.h"
 #include "phase3.h"

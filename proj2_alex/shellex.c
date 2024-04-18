@@ -13,9 +13,19 @@ int main()
 {
     
     char cmdline[MAXLINE]; /* Command line */
-    job_list = NULL;
+    job_list_front = NULL;
     num_of_jobs = 0;
 
+    struct sigaction sa_sigchld;
+    struct sigaction oldaction_sigchld;
+    sa_sigchld.sa_handler = sigchld_handler_for_bg;
+    Sigemptyset(&sa_sigchld.sa_mask);
+    Sigaddset(&sa_sigchld.sa_mask,SIGCHLD);
+    sa_sigchld.sa_flags = SA_RESTART;
+
+    if(sigaction(SIGCHLD,&sa_sigchld,&oldaction_sigchld) < 0){
+        unix_error("Signal Error");
+    }
     while (1) {
 	/* Read */
 	printf("CSE4100-SP-P2> ");                   
@@ -28,6 +38,9 @@ int main()
 
     // print_job_list("main");
 	/* Evaluate */
+
+    //install handler for sigchild
+
 	eval(cmdline);
     } 
 }
@@ -46,8 +59,10 @@ void eval(char *cmdline)
     /**
      * Alex created variables
     */
-    command_t *command_struct = malloc(sizeof(command_struct));
+    command_t cmd_structure;
+    command_t* command_struct = &cmd_structure;
     command_struct->command = NULL;
+    command_struct->already_added = false;  
     /**
      * Initialize argv
     */
@@ -64,6 +79,8 @@ void eval(char *cmdline)
     if(bg){//there is background process, need to access commandline.
         command_struct->command = malloc(MAXLINE);
         strcpy(command_struct->command, cmdline);
+    }else{
+        log_to_terminal("not background process\n");
     }
 
     if (!builtin_command(argv)) { //quit -> exit(0), & -> ignore, other -> run

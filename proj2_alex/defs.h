@@ -1,14 +1,27 @@
 #ifndef DEFS_H
 #define DEFS_H
-
 #include "csapp.h"
 #include <stdbool.h>
+#include <stddef.h>
 #define MAXARGS 128
+
+#ifndef SIG_BLOCK
+#define SIG_BLOCK          0        /* for blocking signals */
+#endif
+#ifndef SIG_UNBLOCK
+#define SIG_UNBLOCK        1        /* for unblocking signals */
+#endif
+#ifndef SIG_SETMASK
+#define SIG_SETMASK        2        /* for setting the signal mask */
+#endif
+
+
 
 typedef struct{
     char** argv; //array of argument strings.
     int bg; //whether there is a background process or not
     char* command; //save the command line if necessary  
+    bool already_added;
 } command_t;
 
 typedef struct job {
@@ -16,10 +29,11 @@ typedef struct job {
     pid_t pid;
     char command[MAXLINE];
     struct job *next;
+    struct job *prev;
 } job_t;
 
 //phase 3 variables
-job_t *job_list;
+job_t *job_list_front;
 int num_of_jobs;
 int pid_pipe[2];
 
