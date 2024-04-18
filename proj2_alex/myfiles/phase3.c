@@ -6,7 +6,9 @@
 void add_job(pid_t pid, const char *command) {
     job_t *new_job = Malloc(sizeof(job_t));
     log_force("inside add_job\n");
+
     new_job->pid = pid;
+    new_job->job_id = num_of_jobs+1;
 
     strcpy(new_job->command, command);
 
@@ -20,7 +22,6 @@ void add_job(pid_t pid, const char *command) {
         new_job->prev = NULL;
         job_list_front->prev = new_job;
         job_list_front = new_job;
-        
     }
     num_of_jobs++;
 
@@ -81,12 +82,12 @@ void sigchld_handler_for_bg(int signum){
 
     log_to_terminal("signal %d received\n",signum);
 
-    log_to_terminal("inside signal handler for bg\n");
+    // log_to_terminal("inside signal handler for bg\n");
     int saved_errno = errno;
     int status;
 
     pid_t pid_bg;
-    while(pid_bg = waitpid(-1,&status,WNOHANG) > 0){ //reaped something
+    while((pid_bg = waitpid(-1,&status,WNOHANG)) > 0){ //reaped something
         delete_from_job_list(pid_bg);
         log_to_terminal("inside signal handler reaped process %d\n",pid_bg);
     }
@@ -108,25 +109,27 @@ void delete_from_job_list(pid_t pid){
     job_t* prev_job = NULL;
     job_t* next_job = NULL;
 
+    log_to_terminal("inside job_list \n");
+    log_to_terminal("delete [%d] from job list ",pid);
     if(job_list_front == NULL){ //list is empty
         return;
     }
 
     while(current_job != NULL){
         if(current_job->pid == pid){
-            if(current_job->prev == NULL){ //first element, first and last 도 처리.
-                if(current_job->next != NULL){
-                    next_job = current_job->next;
+            prev_job = current_job->prev;
+            next_job = current_job->next;
+            if(prev_job == NULL){//first element in the list
+                if(next_job == NULL){//also last element in the list
+                    job_list_front = NULL;
+                }else{ 
+                    job_list_front = next_job;
                     next_job->prev = NULL;
                 }
-                job_list_front = next_job;
-            }else if (current_job->next == NULL){ //last element (cannot be first)
-                current_job->prev = prev_job;
-                prev_job->next = NULL;
-            }else{
-                current_job->next = next_job;
-                current_job->prev = prev_job;
-
+                
+            }else if (next_job == NULL){ //last element
+                    prev_job->next = NULL;
+            }else{//middle element
                 prev_job->next = next_job;
                 next_job->prev = prev_job;
             }

@@ -78,7 +78,8 @@ void fork_handle_command(command_t* command_ptr){
                 pid_t wpid;
                 int status;
                 // log_to_terminal("I am inside forground child's parent\n");
-                if((wpid = waitpid(-1,&status,0)) > 0){
+                if((wpid = waitpid(pid,&status,0)) > 0){
+                    log_to_terminal("the pid for reaping : %d\n",pid);
                     log_to_terminal("reaped child %d - parent process\n",wpid);
                 }
                 if(wpid == 0){
