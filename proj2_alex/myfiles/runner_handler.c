@@ -30,6 +30,7 @@ void fork_handle_command(command_t* command_ptr){
     int starting_idx = 0;
     int logging_idx = 0;
 
+
     //initialize pipe
     init_pipe(pipe_fds,num_of_commands);
     if(pipe(pid_pipe)<0){
@@ -53,7 +54,7 @@ void fork_handle_command(command_t* command_ptr){
         block_signal(SIGCHLD);
         // log_to_terminal("start of for loop - fork handle command\n");
 
-
+        block_signal(SIGINT);
         pid_t pid = Fork();
 
 
@@ -147,9 +148,13 @@ void run_command(char** argv){
     char bin_path[30];
     char usr_bin_path[30];
 
+    int job_id;
     pid_t fg_job_pid;
     int status;
     int result;
+
+    int olderrno;
+
 
     int i;
     
@@ -173,19 +178,24 @@ void run_command(char** argv){
 
     //TODO: fix job id
     if(!strcmp(command_name,"fg")){
-        fg_job_pid = atoi(argv[1]);
-        printf("fg_job_pid : %d\n",fg_job_pid);
+        job_id = atoi(argv[1]);
+        
+        fg_job_pid = get_job_pid_with_job_id(job_id);
 
-        do{
-            result = waitpid(fg_job_pid,&status,WUNTRACED);
-            if(result == -1){
-                if (errno == EINTR) {
-                    continue;  
-                }
-                perror("waitpid");
-                break;
+        olderrno = errno;
+        if (waitpid(fg_job_pid, &status, 0) == -1) {
+            perror("waitpid");
+        } else {
+            if (WIFEXITED(status)) {
+                log_to_terminal("process [%d] exited normally with status %d\n", fg_job_pid, WEXITSTATUS(status));
+            } else if (WIFSIGNALED(status)) {
+                log_to_terminal("process [%d] exited by signal %d\n", fg_job_pid, WTERMSIG(status));
+            } else if (WIFSTOPPED(status)) {
+                log_to_terminal("process [%d] stopped by signal %d\n", fg_job_pid, WSTOPSIG(status));
             }
-        }while (!WIFEXITED(status) && !WIFSIGNALED(status));
+        }
+
+        
         
         return;
     }

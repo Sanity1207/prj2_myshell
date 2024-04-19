@@ -46,23 +46,31 @@ void list_jobs(char* option) {
     job_t *current_job = job_list_front;
     char recency_char;
 
-    if(current_job->recency == CURRENT){
-        recency_char = '+';
-    }else if (current_job->recency == PREVIOUS){
-        recency_char = '-';
-    }else{
-        recency_char = ' ';
-    }
+
 
 
     if(option == NULL){
         fflush(stdout);
         while (current_job != NULL) {
+            if(current_job->recency == CURRENT){
+                recency_char = '+';
+            }else if (current_job->recency == PREVIOUS){
+                recency_char = '-';
+            }else{
+                recency_char = ' ';
+            }
             printf("[%d]%c %s\t\t%s",current_job->job_id,recency_char,current_job->process_state,current_job->command);
             current_job = current_job->next;
         }
     }else if(!strcmp(option,"-l")){
         while (current_job != NULL) {
+            if(current_job->recency == CURRENT){
+                recency_char = '+';
+            }else if (current_job->recency == PREVIOUS){
+                recency_char = '-';
+            }else{
+                recency_char = ' ';
+            }
             printf("[%d]%c %d %s\t\t%s",current_job->job_id,recency_char,current_job->pid,current_job->process_state,current_job->command);
             current_job = current_job->next;
         }
@@ -99,6 +107,20 @@ void unblock_signal(int signum){
     Sigaddset(&mask,signum);
     Sigprocmask(SIG_UNBLOCK,&mask,&oldmask);
     
+}
+
+pid_t get_job_pid_with_job_id(int job_id){
+    job_t* current_job;
+
+    current_job = job_list_front;
+    while(current_job != NULL){
+        if(current_job->job_id == job_id){
+            log_to_terminal("[fg] chosen_job_id = %d\n",current_job->pid);
+            return current_job->pid;
+        }
+    }
+    
+    error_quit("could not find the job with job_id [%d]\n",__func__);
 }
 
 /**
