@@ -9,6 +9,8 @@ void fork_handle_command(command_t* command_ptr){
     
     //phase 3 programming
     unblock_signal(SIGCHLD);
+
+
     /**
      * while programming 
     */
@@ -70,11 +72,14 @@ void fork_handle_command(command_t* command_ptr){
 
         }
         
+        block_signal(SIGSTOP);
+        block_signal(SIGINT);
         pid_t pid = Fork();
 
 
         if(pid>0){ //Parent Process
-            if(cur_command_idx != 0){//not the first command
+            unblock_signal(SIGINT);
+                if(cur_command_idx != 0){//not the first command
                     close(pipe_fds[cur_command_idx-1][0]); //close read end of the pipe that Iused
                 }
 
@@ -90,18 +95,21 @@ void fork_handle_command(command_t* command_ptr){
                         }
                     }
                 }
-            if (!command_ptr->bg){ //command is not background process;
+            if (!command_ptr->bg){ //command is a forground process
+                unblock_signal(SIGSTOP);
                 pid_t wpid;
                 int status;
-                // log_to_terminal("I am inside forground child's parent\n");
-                // log_to_terminal("=====================================================\n");
+                add_job(pid,command_ptr->command,false);
+                log_to_terminal("I am inside forground child's parent\n");
+                log_to_terminal("=====================================================\n");
                 if((wpid = waitpid(pid,&status,0)) > 0){
-                    // log_to_terminal("the pid for reaping : %d\n",pid);
-                    // log_to_terminal("reaped child %d - parent process\n",wpid);
+                    log_to_terminal("the pid for reaping : %d\n",pid);
+                    log_to_terminal("reaped child %d - parent process\n",wpid);
+                    delete_from_job_list(pid);
                 }
-                // log_to_terminal("=====================================================\n");
+                log_to_terminal("=====================================================\n");
                 if(wpid == 0){
-                    // log_to_terminal("no more children to reap - parent process");
+                    log_to_terminal("no more children to reap - parent process");
                 }
                 if (wpid == -1 && errno != ECHILD) {
                     perror("waitpid failed");
@@ -113,7 +121,6 @@ void fork_handle_command(command_t* command_ptr){
                     printf("exit status : %d",child_status);
                 }
             }else{ //background process
-
                 //prevent duplicate addition to joblist
                 if(command_ptr->already_added == false && cur_command_idx == num_of_commands-1){ //last command
                     add_job(pid,command_ptr->command,command_ptr->bg);

@@ -12,8 +12,9 @@ int builtin_command(char **argv);
 int main() 
 {
     // block sigint and sigstop as soon as entering the program.
+    //the background process must have some kind of blocking to SIGSTOP.
     // block_signal(SIGINT);
-    // block_signal(SIGSTOP);
+    block_signal(SIGTSTP);
 
     //don't block them, install handler for handling instead
 
@@ -24,6 +25,7 @@ int main()
     job_list_front = NULL;
     id_for_next_job = 1;
 
+    //install signal handler for sigchld
     struct sigaction sa_sigchld;
     struct sigaction oldaction_sigchld;
     sa_sigchld.sa_handler = sigchld_handler_for_bg;
@@ -32,8 +34,33 @@ int main()
     sa_sigchld.sa_flags = SA_RESTART;
 
     if(sigaction(SIGCHLD,&sa_sigchld,&oldaction_sigchld) < 0){
-        unix_error("Signal Error");
+        unix_error("Signal Error for SIGCHLD");
     }
+
+    //install signal handler for sigint
+    struct sigaction sa_sigint;
+    struct sigaction oldaction_sigint;
+    sa_sigint.sa_handler = sigint_handler_for_parent;
+    Sigemptyset(&sa_sigint.sa_mask);
+    Sigaddset(&sa_sigint.sa_mask,SIGINT);
+    sa_sigint.sa_flags = SA_RESTART;
+
+    if(sigaction(SIGINT,&sa_sigint,&oldaction_sigint) < 0){
+        unix_error("Signal Error for SIGINT");
+    }
+
+    //install signal handler for sigstp
+    struct sigaction sa_sigtstp;
+    struct sigaction oldaction_sigtstp;
+    sa_sigtstp.sa_handler = sigtstp_handler_for_parent;
+    Sigemptyset(&sa_sigtstp.sa_mask);
+    Sigaddset(&sa_sigtstp.sa_mask,SIGTSTP);
+    sa_sigtstp.sa_flags = SA_RESTART;
+
+    if(sigaction(SIGTSTP,&sa_sigtstp,&oldaction_sigtstp) < 0){
+        unix_error("Signal Error for SIGSTOP");
+    } 
+
     while (1) {
 	/* Read */
     fflush(stdout);

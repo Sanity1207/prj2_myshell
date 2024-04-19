@@ -11,7 +11,9 @@ void unblock_signal(int signum);
 void delete_from_job_list(pid_t pid);
 int get_job_pid_with_job_id(int job_id);
 
-void sigchld_handler_for_bg();
+void sigchld_handler_for_bg(int signum);
+void sigint_handler_for_parent(int signum);
+void sigtstp_handler_for_parent(int signum);
 
 void install_parent_handler_for_sigstop();
 void install_parent_handler_for_sigint();
