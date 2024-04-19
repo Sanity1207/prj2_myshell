@@ -3,7 +3,7 @@
 
 #include "phase3.h"
 
-void add_job(pid_t pid, const char *command) {
+void add_job(pid_t pid, const char *command, int bg) {
     job_t *new_job = Malloc(sizeof(job_t));
     // log_force("inside add_job\n");
 
@@ -12,10 +12,17 @@ void add_job(pid_t pid, const char *command) {
     new_job->pid = pid;
     new_job->job_id = id_for_next_job;
     new_job->recency = CURRENT;
+    if(bg){
+        new_job->is_bg = true;
+    }else{
+        new_job->is_bg = false;
+    }
+
     strcpy(new_job->process_state,"RUNNING");
     
 
     strcpy(new_job->command, command);
+
 
 
     if(job_list_front == NULL){//list is empty
@@ -118,10 +125,39 @@ pid_t get_job_pid_with_job_id(int job_id){
             log_to_terminal("[fg] chosen_job_id = %d\n",current_job->pid);
             return current_job->pid;
         }
+        current_job = current_job->next;
     }
+    return -1;
     
-    error_quit("could not find the job with job_id [%d]\n",__func__);
+    // error_quit("could not find the job with job_id [%d]\n",__func__);
 }
+// void install_parent_handler_for_sigstop(){
+//     struct sigaction sa_sigchld;
+//     struct sigaction oldaction_sigchld;
+//     sa_sigchld.sa_handler = sigstop_handler_for_parent;
+//     Sigemptyset(&sa_sigchld.sa_mask);
+//     Sigaddset(&sa_sigchld.sa_mask,SIGSTOP);
+//     sa_sigchld.sa_flags = SA_RESTART;
+
+//     if(sigaction(SIGSTOP,&sa_sigchld,&oldaction_sigchld) < 0){
+//         unix_error("Signal Error_SIGSTOP");
+//     }
+// }
+// void install_parent_handler_for_sigint(){
+//     struct sigaction sa_sigchld;
+//     struct sigaction oldaction_sigchld;
+//     sa_sigchld.sa_handler = sigint_handler_for_parent;
+//     Sigemptyset(&sa_sigchld.sa_mask);
+//     Sigaddset(&sa_sigchld.sa_mask,SIGINT);
+//     sa_sigchld.sa_flags = SA_RESTART;
+
+//     if(sigaction(SIGSTOP,&sa_sigchld,&oldaction_sigchld) < 0){
+//         unix_error("Signal Error_SIGINT");
+//     }
+// }
+
+
+
 
 /**
  * ====================================================================================

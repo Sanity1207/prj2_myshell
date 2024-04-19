@@ -37,6 +37,7 @@ typedef struct job {
     struct job *next;
     struct job *prev;
     RecencyEnum recency;
+    bool  is_bg;
     char process_state[10];
 } job_t;
 

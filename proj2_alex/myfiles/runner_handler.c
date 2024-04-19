@@ -54,7 +54,14 @@ void fork_handle_command(command_t* command_ptr){
         block_signal(SIGCHLD);
         // log_to_terminal("start of for loop - fork handle command\n");
 
-        block_signal(SIGINT);
+        //before fork, see if the command is fg and act accordingly (delete that from list);
+        if(!strcmp(command_ptr->argv[0],"fg")){
+            pid_t fg_job_pid;
+            int job_id = atoi(command_ptr->argv[1]);
+            fg_job_pid = get_job_pid_with_job_id(job_id);
+            delete_from_job_list(fg_job_pid);
+        }
+        
         pid_t pid = Fork();
 
 
@@ -101,7 +108,7 @@ void fork_handle_command(command_t* command_ptr){
 
                 //prevent duplicate addition to joblist
                 if(command_ptr->already_added == false && cur_command_idx == num_of_commands-1){ //last command
-                    add_job(pid,command_ptr->command);
+                    add_job(pid,command_ptr->command,command_ptr->bg);
                     command_ptr->already_added = true;
                     // log_to_terminal("added job %s\n",command_ptr->command);
                 }else{
@@ -112,6 +119,11 @@ void fork_handle_command(command_t* command_ptr){
             }
             // log_to_terminal("end of parent process \n");
         }else if (pid == 0) {  // Child process
+            //set up the handler for the signals first;
+            //1. manipulate the job...list...fuck man how would I do that?
+
+            unblock_signal(SIGSTOP);
+            unblock_signal(SIGINT);
             // Setup redirection
             if (cur_command_idx != 0) {  // Not the first command
                 if (dup2(pipe_fds[cur_command_idx - 1][0], STDIN_FILENO) == -1) {
@@ -180,7 +192,9 @@ void run_command(char** argv){
     if(!strcmp(command_name,"fg")){
         job_id = atoi(argv[1]);
         
-        fg_job_pid = get_job_pid_with_job_id(job_id);
+        if((fg_job_pid = get_job_pid_with_job_id(job_id))<0){//could not find job
+            log_to_terminal("MyShell: %s: %d: no such job\n");
+        }
 
         olderrno = errno;
         if (waitpid(fg_job_pid, &status, 0) == -1) {

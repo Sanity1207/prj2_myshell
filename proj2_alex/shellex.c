@@ -11,6 +11,14 @@ int builtin_command(char **argv);
 
 int main() 
 {
+    // block sigint and sigstop as soon as entering the program.
+    block_signal(SIGINT);
+    block_signal(SIGSTOP);
+
+    //don't block them, install handler for handling instead
+
+    // install_parent_handler_for_sigstop();
+    // install_parent_handler_for_sigint();
     
     char cmdline[MAXLINE]; /* Command line */
     job_list_front = NULL;
@@ -28,6 +36,7 @@ int main()
     }
     while (1) {
 	/* Read */
+    fflush(stdout);
 	printf("CSE4100-SP-P2> ");                   
 	fgets(cmdline, MAXLINE, stdin); 
 	if (feof(stdin))
