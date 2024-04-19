@@ -12,8 +12,8 @@ int builtin_command(char **argv);
 int main() 
 {
     // block sigint and sigstop as soon as entering the program.
-    block_signal(SIGINT);
-    block_signal(SIGSTOP);
+    // block_signal(SIGINT);
+    // block_signal(SIGSTOP);
 
     //don't block them, install handler for handling instead
 

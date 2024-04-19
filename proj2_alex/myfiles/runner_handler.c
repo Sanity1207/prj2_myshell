@@ -56,10 +56,18 @@ void fork_handle_command(command_t* command_ptr){
 
         //before fork, see if the command is fg and act accordingly (delete that from list);
         if(!strcmp(command_ptr->argv[0],"fg")){
+            int status;
             pid_t fg_job_pid;
             int job_id = atoi(command_ptr->argv[1]);
-            fg_job_pid = get_job_pid_with_job_id(job_id);
+            if((fg_job_pid = get_job_pid_with_job_id(job_id))<0){
+                log_to_terminal("MyShell: fg: %d: no such job\n",job_id);
+            }
             delete_from_job_list(fg_job_pid);
+
+            if (waitpid(fg_job_pid, &status, 0) == -1) {
+                    perror("waitpid");
+            }
+
         }
         
         pid_t pid = Fork();
@@ -122,8 +130,9 @@ void fork_handle_command(command_t* command_ptr){
             //set up the handler for the signals first;
             //1. manipulate the job...list...fuck man how would I do that?
 
-            unblock_signal(SIGSTOP);
-            unblock_signal(SIGINT);
+            //block signal in child parent will process both this signals
+            block_signal(SIGSTOP);
+            block_signal(SIGINT);
             // Setup redirection
             if (cur_command_idx != 0) {  // Not the first command
                 if (dup2(pipe_fds[cur_command_idx - 1][0], STDIN_FILENO) == -1) {
@@ -188,31 +197,6 @@ void run_command(char** argv){
         return;
     }
 
-    //TODO: fix job id
-    if(!strcmp(command_name,"fg")){
-        job_id = atoi(argv[1]);
-        
-        if((fg_job_pid = get_job_pid_with_job_id(job_id))<0){//could not find job
-            log_to_terminal("MyShell: %s: %d: no such job\n");
-        }
-
-        olderrno = errno;
-        if (waitpid(fg_job_pid, &status, 0) == -1) {
-            perror("waitpid");
-        } else {
-            if (WIFEXITED(status)) {
-                log_to_terminal("process [%d] exited normally with status %d\n", fg_job_pid, WEXITSTATUS(status));
-            } else if (WIFSIGNALED(status)) {
-                log_to_terminal("process [%d] exited by signal %d\n", fg_job_pid, WTERMSIG(status));
-            } else if (WIFSTOPPED(status)) {
-                log_to_terminal("process [%d] stopped by signal %d\n", fg_job_pid, WSTOPSIG(status));
-            }
-        }
-
-        
-        
-        return;
-    }
 
 
 
