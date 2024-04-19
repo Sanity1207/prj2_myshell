@@ -3,7 +3,6 @@
 
 #include "../defs.h"  
 #include "../csapp.h"
-#include "runners.h"
 #include "phase3.h"
 
 void fork_handle_command(command_t* command_ptr);

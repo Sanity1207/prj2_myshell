@@ -26,7 +26,7 @@ typedef enum {
 typedef struct{
     char** argv; //array of argument strings.
     int bg; //whether there is a background process or not
-    char* command; //save the command line if necessary  
+    char* command; //save the command line 
     bool already_added;
 } command_t;
 

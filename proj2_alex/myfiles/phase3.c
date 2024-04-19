@@ -120,16 +120,15 @@ pid_t get_job_pid_with_job_id(int job_id){
 
     current_job = job_list_front;
     while(current_job != NULL){
-        log_to_terminal("current_job_id = %d, search job id = %d\n",current_job->job_id,job_id);
+        // log_to_terminal("current_job_id = %d, search job id = %d\n",current_job->job_id,job_id);
         if(current_job->job_id == job_id){
-            log_to_terminal("[fg] chosen_job_id = %d\n",current_job->pid);
+            // log_to_terminal("[fg] chosen_job_id = %d\n",current_job->pid);
             return current_job->pid;
         }
         current_job = current_job->next;
     }
     return -1;
     
-    // error_quit("could not find the job with job_id [%d]\n",__func__);
 }
 // void install_parent_handler_for_sigstop(){
 //     struct sigaction sa_sigchld;

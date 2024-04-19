@@ -17,10 +17,6 @@ void fork_handle_command(command_t* command_ptr){
     //phase 2 piping 
     int pipe_fds[num_of_commands-1][2];
 
-    //phase 3 piping
-    int pid_pipe[2];
-
-
     int child_status;
     char* cur_command_args[MAXARGS];
     int cur_command_idx=0;
@@ -178,9 +174,6 @@ void run_command(char** argv){
 
 
     int i;
-    
-
-
     //1. fetch the first argument
     strcpy(command_name,argv[0]);
 
