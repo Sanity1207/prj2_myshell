@@ -39,7 +39,11 @@ void add_job(pid_t pid, const char *command, int bg) {
             }
             current_job = current_job->next;
         }
-
+        if(current_job->recency == CURRENT){
+                current_job->recency = PREVIOUS;
+        }else if (current_job->recency == PREVIOUS){
+                current_job->recency = NORMAL;
+        }
         //the next node of currentjob is null.
         current_job->next = new_job;
         new_job->prev = current_job;

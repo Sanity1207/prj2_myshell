@@ -7,6 +7,7 @@
 
 void fork_handle_command(command_t* command_ptr);
 void run_command(char** argv);
+void run_cd(char** argv);
 void init_command_args(char** cur_command_args,char** rest_command_args,char** argv);
 void init_pipe(int pipe_fds[][2],int num_of_commands);
 void set_up_command_args(char** cur_command_args,char** rest_command_args,int* starting_idx);

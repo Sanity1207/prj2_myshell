@@ -124,7 +124,7 @@ void fork_handle_command(command_t* command_ptr){
             // log_to_terminal("end of parent process \n");
         }else if (pid == 0) {  // Child process
             //set up the handler for the signals first;
-            //1. manipulate the job...list...fuck man how would I do that?
+            //1. manipulate the job...list... man how would I do that?
 
             //block signal in child parent will process both this signals
             block_signal(SIGSTOP);
@@ -306,6 +306,31 @@ void remove_quotes_from_argv(char** argv){
     }
 }
 
+void run_cd(char** argv){
+    if(argv[1] == NULL){
+        if(chdir(getenv("HOME"))){
+            fprintf(stderr,"error executing cd");
+            exit(1);
+        }
+    }else{//run chdir 
+        if(chdir(argv[1])){
+            switch (errno)
+            {
+            case EACCES:
+                printf("cd: %s: Permission denied",argv[1]);
+                break;
+            case ENOENT:
+                printf("bash: cd: %s: No such file or directory\n",argv[1]);
+                break;
+            case ENOTDIR:
+                printf("bash: cd: %s: Not a directory\n",argv[1]);
+                break;
+            default:
+                printf("some other error executing cd\n");
+            }
+        }
+    }
+}
 
 
 #endif
